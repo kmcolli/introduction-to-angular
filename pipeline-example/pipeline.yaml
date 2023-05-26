@@ -57,12 +57,32 @@ spec:
       workspaces:
         - name: source
           workspace: workspace
+    - name: test
+      runAfter:
+        - build
+      taskSpec:
+        metadata: {}
+        spec: null
+        steps:
+          - image: ghcr.io/puppeteer/puppeteer
+            name: npm-test
+            resources: {}
+            script: |
+              cd "$(workspaces.code.path)"
+              npm ci
+              npm run test
+        workspaces:
+          - description: directory with a package.json to test
+            name: code
+      workspaces:
+        - name: code
+          workspace: workspace
     - name: deploy
       params:
         - name: SCRIPT
           value: oc rollout status deploy/$(params.APP_NAME)
       runAfter:
-        - build
+        - test
       taskRef:
         kind: ClusterTask
         name: openshift-client
